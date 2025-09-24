@@ -1,0 +1,45 @@
+name: todo-drf CI pre-commit
+on:
+  push:
+    branches:
+      - master
+      - dev
+      - feature
+  pull_request:
+    branches:
+      - master
+      - dev
+jobs:
+  check-code-and-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.12.3']
+    steps:
+      - name: Get code
+        uses: actions/checkout@v4
+
+      - name: Set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: save poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock')}}
+          restore-keys: ${{ runner.os }}-poetry-
+      - name: Install poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: Install dependencies
+        run: |
+          poetry install --no-interaction --with dev --no-root
+      - name: Check code style
+        uses: pre-commit/action@v3.0.1
+      - name: Launch test
+        run: |
+          poetry run pytest --verbose
