@@ -13,8 +13,18 @@ readme = "README.md"
 requires-python = ">=3.12,<4"
 dependencies = [
     "djangorestframework (>=3.16.1,<4.0.0)",
-    "psycopg2-binary (>=2.9.10,<3.0.0)"
+    "psycopg2-binary (>=2.9.10,<3.0.0)",
+    "djangorestframework-simplejwt (>=5.5.1,<6.0.0)"
 ]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+skip-string-normalization = true
+
+[tool.isort]
+profile = "black"
+line_length = 88
 
 
 [build-system]

@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
             "username",
             "email",
             "password",
-            "role",
+            # "role",
             "date_joined",
             "last_login",
             "is_staff",
