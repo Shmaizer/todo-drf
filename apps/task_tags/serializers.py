@@ -10,19 +10,15 @@ class TaskTagSerializer(serializers.ModelSerializer):
         queryset=Task.objects.all(), source="task"
     )
 
-    tags_id = serializers.PrimaryKeyRelatedField(
-        queryset=Tag.objects.all(), source="tags"
+    tag_id = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(), source="tag"
     )
 
     class Meta:
         model = TaskTag
-        fields = [
-            "id",
-            "task_id",
-            "tags_id",
-        ]
+        fields = ["id", "task_id", "tag_id", "added_at"]
 
     def create(self, validated_data):
         return TaskTag.objects.create(
-            task=validated_data["task"], tags=validated_data["tags"]
+            task=validated_data["task"], tags=validated_data["tag"]
         )

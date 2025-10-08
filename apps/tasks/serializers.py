@@ -5,11 +5,6 @@ from .models import Task
 
 
 class TaskSerializer(serializers.ModelSerializer):
-    owner_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        source="owner",
-        allow_null=True,
-    )
     assigned_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(), source="assigned", allow_null=True, required=False
     )
@@ -31,12 +26,6 @@ class TaskSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        return Task.objects.create(
-            title=validated_data["title"],
-            description=validated_data["description"],
-            due_date=validated_data["due_date"],
-            status=validated_data["status"],
-            priority=validated_data["priority"],
-            owner=validated_data["owner"],
-            assigned=validated_data["assigned"],
-        )
+        request = self.context.get("request")
+        validated_data["owner"] = request.user
+        return Task.objects.create(**validated_data)

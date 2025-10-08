@@ -2,7 +2,11 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.http import JsonResponse
 from django.shortcuts import render
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.views import APIView
 
 from .authentication import JWTAuthentication
@@ -19,6 +23,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class UserCreateView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         data = request.data
         required_fields = ["username", "email", "password"]
@@ -49,6 +55,8 @@ class UserCreateView(APIView):
 
 
 class UserAuthLoginView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         data = request.data
         required_fields = ["username", "password"]
