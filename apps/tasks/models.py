@@ -46,3 +46,4 @@ class Task(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["status", "priority", "due_date"])]
+        db_table = "tasks"

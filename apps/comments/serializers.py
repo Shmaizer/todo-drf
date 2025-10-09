@@ -6,25 +6,14 @@ from .models import Comment
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    task_id = serializers.PrimaryKeyRelatedField(
-        queryset=Task.objects.all(),
-        source="task",
-    )
-
-    author_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        source="author",
-    )
+    author_name = serializers.CharField(source='author.username', read_only=True)
 
     class Meta:
         model = Comment
-        fields = ["task_id", "author_id", "text", "created_at", "updated_at"]
+        fields = ["id", "author_name", "text", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at", "author_name"]
 
     def create(self, validated_data):
-        return Comment.objects.create(
-            task=self.context["task"],
-            author=self.context["author"],
-            text=validated_data["text"],
-            created_at=validated_data["created_at"],
-            updated_at=validated_data["updated_at"],
-        )
+        # request = self.context.get("request")
+        # validated_data["author"] = request.user
+        return Comment.objects.create(**validated_data)

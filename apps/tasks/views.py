@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from ..users.authentication import JWTAuthentication
 from .models import Task
 from .permissions import IsTaskOwnerOrAssignee
-from .serializers import TaskSerializer
+from .serializers import TaskSerializer, TaskWithCommentsSerializer
 
 # class TaskViewSet(viewsets.ModelViewSet):
 #     queryset = Task.objects.all()
@@ -170,4 +170,21 @@ class TaskPriorityAPIView(APIView):
         task.priority = priority
         task.save(update_fields=['priority'])
         serializer = TaskSerializer(task)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class TaskDetailWithCommentsAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsTaskOwnerOrAssignee]
+
+    def get_object(self, pk, request):
+        task = Task.objects.get(pk=pk)
+        self.check_object_permissions(request, task)
+        return task
+
+    def get(self, request, pk):
+        try:
+            task = self.get_object(pk, request)
+        except Task.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = TaskWithCommentsSerializer(task)
         return Response(serializer.data, status=status.HTTP_200_OK)

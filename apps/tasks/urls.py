@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     TaskAssignAPIView,
     TaskDetailAPIView,
+    TaskDetailWithCommentsAPIView,
     TaskListCreateAPIView,
     TaskPriorityAPIView,
     TaskStatusAPIView,
@@ -25,5 +26,10 @@ urlpatterns = [
         "tasks/<int:pk>/priority/",
         TaskPriorityAPIView.as_view(),
         name="task-update-priority",
+    ),
+    path(
+        "tasks/<int:pk>/detail/",
+        TaskDetailWithCommentsAPIView.as_view(),
+        name="task-detail-with-comments",
     ),
 ]

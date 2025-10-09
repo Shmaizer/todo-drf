@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from ..comments.serializers import CommentSerializer
 from ..users.models import User
 from .models import Task
 
@@ -29,3 +30,24 @@ class TaskSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         validated_data["owner"] = request.user
         return Task.objects.create(**validated_data)
+
+
+class TaskWithCommentsSerializer(serializers.ModelSerializer):
+    comments = CommentSerializer(source="task_comment", many=True, read_only=True)
+
+    class Meta:
+        model = Task
+        fields = [
+            "id",
+            "title",
+            "description",
+            "created_at",
+            "updated_at",
+            "due_date",
+            "status",
+            "priority",
+            "owner_id",
+            "assigned_id",
+            "is_active",
+            "comments",
+        ]
