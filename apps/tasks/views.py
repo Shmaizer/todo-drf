@@ -12,14 +12,7 @@ from ..users.authentication import JWTAuthentication
 from .models import Task
 from .permissions import IsTaskOwnerOrAssignee
 from .serializers import TaskSerializer, TaskWithCommentsSerializer
-
-# class TaskViewSet(viewsets.ModelViewSet):
-#     queryset = Task.objects.all()
-#     serializer_class = TaskSerializer
-#     def get_queryset(self):
-#         return Task.objects.filter(
-#             Q(owner=self.request.user) | Q(assigned=self.request.user.id)
-#         ).distinct()
+from .utils import get_task_or_404
 
 
 class TaskListCreateAPIView(APIView):
@@ -41,22 +34,13 @@ class TaskListCreateAPIView(APIView):
 class TaskDetailAPIView(APIView):
     permission_classes = [IsAuthenticated, IsTaskOwnerOrAssignee]
 
-    def get_object(self, pk, request):
-        try:
-            task = Task.objects.get(pk=pk)
-        except Task.DoesNotExist:
-            # raise PermissionDenied("Not have permission to access this task")
-            raise Http404("Page not found")
-        self.check_object_permissions(request, task)
-        return task
-
     def get(self, request, pk):
-        task = self.get_object(pk, request)
+        task = get_task_or_404(pk, request, self)
         serializer = TaskSerializer(task)
         return Response(serializer.data)
 
     def put(self, request, pk):
-        task = self.get_object(pk, request)
+        task = get_task_or_404(pk, request, self)
         serializer = TaskSerializer(task, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -64,7 +48,7 @@ class TaskDetailAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        task = self.get_object(pk, request)
+        task = get_task_or_404(pk, request, self)
         task.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -75,11 +59,6 @@ User = get_user_model()
 class TaskAssignAPIView(APIView):
     permission_classes = [IsAuthenticated, IsTaskOwnerOrAssignee]
 
-    def get_object(self, pk, request):
-        task = Task.objects.get(pk=pk)
-        self.check_object_permissions(request, task)
-        return task
-
     def patch(self, request, pk):
         """
         Waiting for payload:
@@ -87,7 +66,7 @@ class TaskAssignAPIView(APIView):
             "assigned_id": <user_id> or null
         }
         """
-        task = self.get_object(pk, request)
+        task = get_task_or_404(pk, request, self)
         if task.owner != request.user:
             return Response(
                 {"detail": "You do not have permission to perform this action"},
@@ -110,11 +89,6 @@ class TaskAssignAPIView(APIView):
 class TaskStatusAPIView(APIView):
     permission_classes = [IsAuthenticated, IsTaskOwnerOrAssignee]
 
-    def get_object(self, pk, request):
-        task = Task.objects.get(pk=pk)
-        self.check_object_permissions(request, task)
-        return task
-
     def patch(self, request, pk):
         """
         Waiting for payload:
@@ -122,7 +96,7 @@ class TaskStatusAPIView(APIView):
             "status": "NEW" | "IN_PROGRESS" | "COMPLETED"
         }
         """
-        task = self.get_object(pk, request)
+        task = get_task_or_404(pk, request, self)
         new_status = request.data.get("status", "NEW")
         if task.owner != request.user:
             return Response(
@@ -143,11 +117,6 @@ class TaskStatusAPIView(APIView):
 class TaskPriorityAPIView(APIView):
     permission_classes = [IsAuthenticated, IsTaskOwnerOrAssignee]
 
-    def get_object(self, pk, request):
-        task = Task.objects.get(pk=pk)
-        self.check_object_permissions(request, task)
-        return task
-
     def patch(self, request, pk):
         """
         Waiting for payload:
@@ -155,7 +124,7 @@ class TaskPriorityAPIView(APIView):
             "priority": "LOW" | "MEDIUM" | "HIGH"
         }
         """
-        task = self.get_object(pk, request)
+        task = get_task_or_404(pk, request, self)
         priority = request.data.get("priority", "LOW")
         if task.owner != request.user:
             return Response(
@@ -176,14 +145,9 @@ class TaskPriorityAPIView(APIView):
 class TaskDetailWithCommentsAPIView(APIView):
     permission_classes = [IsAuthenticated, IsTaskOwnerOrAssignee]
 
-    def get_object(self, pk, request):
-        task = Task.objects.get(pk=pk)
-        self.check_object_permissions(request, task)
-        return task
-
     def get(self, request, pk):
         try:
-            task = self.get_object(pk, request)
+            task = get_task_or_404(pk, request, self)
         except Task.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = TaskWithCommentsSerializer(task)

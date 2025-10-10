@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 
 from ..tasks.models import Task
 from ..tasks.permissions import IsTaskOwnerOrAssignee
+from ..tasks.utils import get_task_or_404
 from .models import Comment
 from .serializers import CommentSerializer
 
@@ -14,22 +15,14 @@ from .serializers import CommentSerializer
 class CommentDetailAPIView(APIView):
     permission_classes = (IsAuthenticated, IsTaskOwnerOrAssignee)
 
-    def get_task(self, pk, request):
-        try:
-            task = Task.objects.get(pk=pk)
-        except Task.DoesNotExist:
-            raise Http404("Task not found")
-        self.check_object_permissions(request, task)
-        return task
-
     def get(self, request, pk):
-        task = self.get_task(pk, request)
+        task = get_task_or_404(pk, request, self)
         comments = Comment.objects.filter(task=task)
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, pk):
-        task = self.get_task(pk, request)
+        task = get_task_or_404(pk, request, self)
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(task=task, author=request.user)

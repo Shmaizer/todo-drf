@@ -9,6 +9,7 @@ from ..tags.models import Tag
 from ..tags.serializers import TagSerializer
 from ..tasks.models import Task
 from ..tasks.permissions import IsTaskOwnerOrAssignee
+from ..tasks.utils import get_task_or_404
 from .models import TaskTag
 from .serializers import TaskTagSerializer
 
@@ -16,16 +17,8 @@ from .serializers import TaskTagSerializer
 class TaskTagsDetailAPIView(APIView):
     permission_classes = [IsAuthenticated, IsTaskOwnerOrAssignee]
 
-    def get_task(self, pk, request):
-        try:
-            task = Task.objects.get(pk=pk)
-        except Task.DoesNotExist:
-            raise Http404("Task not found")
-        self.check_object_permissions(request, task)
-        return task
-
     def get(self, request, pk):
-        task = self.get_task(pk, request)
+        task = get_task_or_404(pk, request, self)
         task_tags_queryset = (
             TaskTag.objects.filter(task=task)
             .select_related("tag")
@@ -41,7 +34,7 @@ class TaskTagsDetailAPIView(APIView):
             "tags": [1, 2, 3]
         }
         """
-        task = self.get_task(pk, request)
+        task = get_task_or_404(pk, request, self)
         tag_list = request.data.get("tags")
         if not tag_list:
             return Response(
@@ -103,16 +96,8 @@ class TaskTagsDetailAPIView(APIView):
 
 
 class TaskTagsDeleteAPIView(APIView):
-    def get_task(self, pk, request):
-        try:
-            task = Task.objects.get(pk=pk)
-        except Task.DoesNotExist:
-            raise Http404("Task not found")
-        self.check_object_permissions(request, task)
-        return task
-
     def delete(self, request, pk, tag_id):
-        task = self.get_task(pk, request)
+        task = get_task_or_404(pk, request, self)
         try:
             task_tag = TaskTag.objects.get(task=task, tag_id=tag_id)
         except TaskTag.DoesNotExist:
