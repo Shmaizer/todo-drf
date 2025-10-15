@@ -29,6 +29,21 @@ class UserSerializer(serializers.ModelSerializer):
             password=validated_data["password"],
             is_staff=validated_data.get("is_staff", False),
             is_superuser=validated_data.get("is_superuser", False),
-            is_active=validated_data.get("is_active", True),
+            is_active=validated_data.get("is_active", False),
         )
         return user
+
+
+class ActivateSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(min_length=6, max_length=6)
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(min_length=6, max_length=6)
+    new_password = serializers.CharField(min_length=8)

@@ -11,6 +11,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
   web:
     build:
       context: ..
@@ -28,6 +33,53 @@ services:
       - POSTGRES_PORT=5432
     volumes:
       - ..:/app:cached
+
+  celery:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: poetry run celery -A todoapi worker --loglevel=INFO
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - ../.env
+    volumes:
+      - ../:/app:cached
+
+  celery_beat:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: poetry run celery -A todoapi beat --loglevel=INFO
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - ../.env
+    volumes:
+      - ../:/app:cached
+
+#  flower:
+#    image: mher/flower:latest
+#    command: [
+#      "celery",
+#      "-A", "todoapi",
+#      "flower",
+#      "--broker=redis://redis:6379/0",
+#      "--port=5555",
+#      "--address=0.0.0.0"
+#    ]
+#    depends_on:
+#      - redis
+#      - db
+#    ports:
+#      - "5555:5555"
+#    env_file:
+#      - ../.env
+#    volumes:
+#      - ..:/app:cached
+#    working_dir: /app
 
 volumes:
   postgres_data:
